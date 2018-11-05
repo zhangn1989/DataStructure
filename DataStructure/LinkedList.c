@@ -5,8 +5,8 @@
 
 LinkList *LkListCreate(void)
 {
-	LinkList *p = (LinkList*)malloc(sizeof(LNode));
-	if (p) memset(p, 0, sizeof(LNode));
+	LinkList *p = (LinkList*)malloc(sizeof(LinkList));
+	if (p) memset(p, 0, sizeof(LinkList));
 	return p;
 }
 
@@ -54,7 +54,7 @@ int LkListLength(LinkList *pList)
 	return leng;
 }
 
-LNode *LkGetNode(LinkList *pList, int i)
+ElemType *LkGetNode(LinkList *pList, int i)
 {
 	if (!pList)
 		return NULL;
@@ -64,7 +64,7 @@ LNode *LkGetNode(LinkList *pList, int i)
 	while (p)
 	{
 		if (index == i)
-			return p;
+			return &p->data;
 		p = p->next;
 		++index;
 	}
@@ -73,7 +73,7 @@ LNode *LkGetNode(LinkList *pList, int i)
 	return NULL;
 }
 
-int LkLocateNode(LinkList *pList, LNode *pNode)
+int LkLocateNode(LinkList *pList, ElemType *pNode)
 {
 	if (!pList || !pNode)
 		return -1;
@@ -82,7 +82,7 @@ int LkLocateNode(LinkList *pList, LNode *pNode)
 	LinkList *p = pList->next;
 	while (p)
 	{
-		if (ElemIsEqual(&(p->data), &(pNode->data)))
+		if (ElemIsEqual(&(p->data), pNode))
 			return i;
 		p = p->next;
 		++i;
@@ -91,49 +91,67 @@ int LkLocateNode(LinkList *pList, LNode *pNode)
 	return -2;
 }
 
-LNode *LkPriorNode(LinkList *pList, LNode *pNode)
+ElemType *LkPriorNode(LinkList *pList, ElemType *pNode)
 {
 	if (!pList || !pNode)
 		return NULL;
 
 	if (LkListIsEmpty(pList))
-		return pList;
+		return NULL;
 
-	int index = LkLocateNode(pList, pNode);
-	if (index == 0)
-		return pList;
-	if (index > 0)
-		return LkGetNode(pList, index - 1);
+	LinkList *p = pList->next;
+	while (p)
+	{
+		if (p->next && ElemIsEqual(&(p->next->data), pNode))
+		{
+			return &p->data;
+		}
+		p = p->next;
+	}
+
 	return NULL;
 }
 
-LNode *LkNextNode(LinkList *pList, LNode *pNode)
+ElemType *LkNextNode(LinkList *pList, ElemType *pNode)
 {
 	if (!pList || !pNode)
 		return NULL;
-	return pNode->next;
+	
+	LinkList *p = pList->next;
+	while (p)
+	{
+		if (ElemIsEqual(&(p->data), pNode))
+		{
+			p = p->next;
+			if (p)
+				return &p->data;
+			else
+				return NULL;
+		}
+		p = p->next;
+	}
+	return NULL;
 }
 
-void LkListInsert(LinkList *pList, int i, LNode *pNode)
+void LkListInsert(LinkList *pList, int i, ElemType *pNode)
 {
 	if (!pList || !pNode || i < 0 || i > LkListLength(pList))
 		return;
 
-	LNode *Prior = NULL;
-	if (i == 0)
-		Prior = pList;
-	else
-		Prior = LkGetNode(pList, i - 1);
-	
-	if (!Prior)
-		return;
+	int no = 0;
+	LinkList *p = pList;
+	while (p && no < i)
+	{
+		++no;
+		p = p->next;
+	}
 
-	LNode *node = (LNode *)malloc(sizeof(LNode));
+	LinkList *node = (LinkList *)malloc(sizeof(LinkList));
 	if (!node)
 		return;
-	memcpy(node, pNode, sizeof(LNode));
-	node->next = Prior->next;
-	Prior->next = node;
+	memcpy(node, pNode, sizeof(LinkList));
+	node->next = p->next;
+	p->next = node;
 }
 
 void LkListDelete(LinkList *pList, int i)
@@ -161,7 +179,7 @@ void LkListDelete(LinkList *pList, int i)
 	return;
 }
 
-void LkListInsertLast(LinkList *pList, LNode *pNode)
+void LkListInsertLast(LinkList *pList, ElemType *pNode)
 {
 	if (!pList || !pNode)
 		return;
@@ -171,9 +189,9 @@ void LkListInsertLast(LinkList *pList, LNode *pNode)
 	{
 		if (p->next == NULL)
 		{
-			LNode *node = (LNode*)malloc(sizeof(LNode));
+			LinkList *node = (LinkList*)malloc(sizeof(LinkList));
 			if (!node) return;
-			memcpy(node, pNode, sizeof(LNode));
+			memcpy(node, pNode, sizeof(LinkList));
 			p->next = node;
 			node->next = NULL;
 			return;
@@ -208,8 +226,8 @@ void LkListUnion(LinkList *pList1, LinkList *pList2)
 		return;
 
 	BOOL isFind = FALSE;
-	LNode *node1 = pList1->next;
-	LNode *node2 = pList2->next;
+	LinkList *node1 = pList1->next;
+	LinkList *node2 = pList2->next;
 
 	for (; node2; node2 = node2->next)
 	{
@@ -228,7 +246,7 @@ void LkListUnion(LinkList *pList1, LinkList *pList2)
 		if (isFind)
 			continue;
 
-		LkListInsertLast(pList1, node2);
+		LkListInsertLast(pList1, &node2->data);
 	}
 }
 
@@ -241,22 +259,20 @@ void LkTestFunc(void)
 	int leng = LkListLength(list);
 	for (int i = 0; i < 10; ++i)
 	{
-		LNode node;
-		node.data.data = 97 + i;
-		node.next = NULL;
+		ElemType node;
+		node.data = 97 + i;
 		LkListInsert(list, i, &node);
 	}
 
 	b = LkListIsEmpty(list);
 	leng = LkListLength(list);
-	LNode *pNode = LkGetNode(list, 5);
-	LNode *pPrior = LkPriorNode(list, pNode);
-	LNode *pNext = LkNextNode(list, pNode);
+	ElemType *pNode = LkGetNode(list, 5);
+	ElemType *pPrior = LkPriorNode(list, pNode);
+	ElemType *pNext = LkNextNode(list, pNode);
 	int index = LkLocateNode(list, pNext);
 	LkListDelete(list, 3);
-	LNode node;
-	node.data.data = 97;
-	node.next = NULL;
+	ElemType node;
+	node.data = 97;
  	LkListDeleteLast(list);
  	LkListInsertLast(list, &node);
 
@@ -265,9 +281,8 @@ void LkTestFunc(void)
 		goto END;
 	for (int i = 0; i < 10; ++i)
 	{
-		LNode node;
-		node.data.data = 103 + i;
-		node.next = NULL;
+		ElemType node;
+		node.data = 103 + i;
 		LkListInsert(list1, i, &node);
 	}
 

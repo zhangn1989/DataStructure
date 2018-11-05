@@ -8,7 +8,13 @@ SLinkList *SLkListCreate(void)
 {
 	SLinkList *p = (SLinkList *)malloc(SLIST_INIT_SIZE * sizeof(SLinkList));
 	if (!p) return NULL;
-	memset(p, 0, SLIST_INIT_SIZE * sizeof(SLNode));
+
+	memset(p, 0, SLIST_INIT_SIZE  * sizeof(SLinkList));
+	p->size = SLIST_INIT_SIZE;
+
+	for (int i = 1; i < p->size; ++i)
+		p[i].cur = -1;
+
 	return p;
 }
 
@@ -24,8 +30,10 @@ void SLkListDistroy(SLinkList *pList)
 void SLkListClear(SLinkList *pList)
 {
 	if (!pList) return;
-	int len = SLkListLength(pList);
-	memset(pList, 0, (len + 1) * sizeof(SLNode));
+	memset(&pList[1], 0, (pList->size - 1) * sizeof(SLinkList));
+
+	for (int i = 1; i < pList->size; ++i)
+		pList[i].cur = -1;
 }
 
 BOOL SLkListIsEmpty(SLinkList *pList)
@@ -38,34 +46,30 @@ BOOL SLkListIsEmpty(SLinkList *pList)
 int SLkListLength(SLinkList *pList)
 {
 	if (!pList) return 0;
-	int len = 0;
-	for (int i = 0; pList[i].cur != 0; i = pList[i].cur)
-		++len;
-	return len;
+
+	return pList->len;
 }
 
-SLNode *SLkGetNode(SLinkList *pList, int i)
+ElemType *SLkGetNode(SLinkList *pList, int i)
 {
 	if (!pList || i < 0)
 		return NULL;
 	
-	// 如果当前索引的cur不是0，说明当前索引cur的位置上有数据
-	// 而查找的次数正好是数据的编号
-	// 因此要返回当前索引的cur所在位置的数据，而不是当前索引所在位置的数据
 	int no = 0;
-	int cur = pList[0].cur;
-	while (cur)
+	SLinkList *node = pList;
+	while (node->cur)
 	{
 		if (no == i)
-			return &pList[cur];
+			return &pList[node->cur].data;
+
 		++no;
-		cur = pList[cur].cur;
+		node = &pList[node->cur];
 	}
 
 	return NULL;
 }
 
-int SLkLocateNode(SLinkList *pList, SLNode *pNode)
+int SLkLocateNode(SLinkList *pList, ElemType *pNode)
 {
 	if (!pNode || !pList)
 		return -1;
@@ -74,7 +78,7 @@ int SLkLocateNode(SLinkList *pList, SLNode *pNode)
 	int cur = pList[0].cur;
 	while (cur)
 	{
-		if (ElemIsEqual(&pList[cur].data, &pNode->data))
+		if (ElemIsEqual(&pList[cur].data, pNode))
 			return no;
 		++no;
 		cur = pList[cur].cur;
@@ -83,57 +87,138 @@ int SLkLocateNode(SLinkList *pList, SLNode *pNode)
 	return -2;
 }
 
-SLNode *SLkPriorNode(SLinkList *pList, SLNode *pNode)
+ElemType *SLkPriorNode(SLinkList *pList, ElemType *pNode)
 {
-	if (!pList || pNode)
+	if (!pList || !pNode)
 		return NULL;
-
-	if (SLkListIsEmpty(pList))
-		return pList;
 
 	int index = SLkLocateNode(pList, pNode);
 	if (index == 0)
-		return pList;
-	if (index > 0)
-		return SLkGetNode(pList, index - 1);
-	return NULL;
-}
-
-SLNode *SLkNextNode(SLinkList *pList, SLNode *pNode)
-{
-	if (!pList || pNode)
 		return NULL;
-	if (pNode->cur)
-		return &pList[pNode->cur];
+	if (index > 0 && index < pList->len)
+	{
+		return SLkGetNode(pList, index - 1);
+	}
 	return NULL;
 }
 
-void SLkListInsert(SLinkList *pList, int i, SLNode *pNode)
+ElemType *SLkNextNode(SLinkList *pList, ElemType *pNode)
 {
+	if (!pList || !pNode)
+		return NULL;
+
+	int index = SLkLocateNode(pList, pNode);
+	if (index >= 0 && index < pList->len - 1)
+	{
+		return SLkGetNode(pList, index + 1);
+	}
+	return NULL;
+}
+
+void SLkListInsert(SLinkList *pList, int i, ElemType *pNode)
+{
+	if (!pList || !pNode || i < 0 || i > pList->len)
+		return;
+	
+	if (pList->len >= pList->size)
+	{
+		SLinkList *p = realloc(pList,
+			(pList->size + SLISTINCREMENT) * sizeof(SLinkList));
+
+		if (!p)
+			return;
+
+		memset(pList + pList->size, 0, SLISTINCREMENT * sizeof(SLinkList));
+		pList = p;
+		pList->size += SLISTINCREMENT;
+	}
+
+	int index = 1;
+	for ( ;index < pList->size; ++index)
+	{
+		if (pList[index].cur < 0)
+		{
+			memcpy(&pList[index].data, pNode, sizeof(ElemType));
+			break;
+		}
+	}
+
+	int no = 0;
+	SLinkList *node = pList;
+	while (node->cur && no <= i)
+	{
+		++no;
+		node = &pList[node->cur];
+	}
+
+	if (no > i)
+		return;
+
+	pList[index].cur = node->cur;
+	node->cur = index;
+	pList->len++;
 
 }
 
 void SLkListDelete(SLinkList *pList, int i)
 {
+	if (!pList || i < 0 || i >= pList->len)
+		return;
 
+	int no = 0;
+	SLinkList *node = pList;
+	while (node->cur)
+	{
+		if (no == i)
+		{
+			int cur = node->cur;
+			node->cur = pList[node->cur].cur;
+			pList[cur].cur = -1;
+			pList->len--;
+			break;
+		}
+
+		++no;
+		node = &pList[node->cur];
+	}
 }
 
-void SLkListInsertLast(SLinkList *pList, SLNode *pNode)
+void SLkListInsertLast(SLinkList *pList, ElemType *pNode)
 {
-
+	SLkListInsert(pList, SLkListLength(pList), pNode);
 }
 
 void SLkListDeleteLast(SLinkList *pList)
 {
-
-}
-
-void SLkListUnion(SLinkList *pList1, SLinkList *pList2)
-{
-
+	SLkListDelete(pList, SLkListLength(pList) - 1);
 }
 
 void SLkTestFunc(void)
 {
+	SLinkList *list = SLkListCreate();
+	if (!list)
+		return;
+	BOOL b = SLkListIsEmpty(list);
+	int leng = SLkListLength(list);
+	for (int i = 0; i < 10; ++i)
+	{
+		ElemType node;
+		node.data = 97 + i;
+		SLkListInsert(list, i, &node);
+	}
 
+	b = SLkListIsEmpty(list);
+	leng = SLkListLength(list);
+	ElemType *pNode = SLkGetNode(list, 5);
+	ElemType *pPrior = SLkPriorNode(list, pNode);
+	ElemType *pNext = SLkNextNode(list, pNode);
+	int index = SLkLocateNode(list, pNext);
+	SLkListDelete(list, 3);
+	ElemType node;
+	node.data = 97;
+	SLkListDeleteLast(list);
+	SLkListInsertLast(list, &node);
+
+	SLkListClear(list);
+	SLkListDistroy(list);
 }

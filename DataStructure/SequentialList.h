@@ -22,7 +22,7 @@ typedef struct st_SqList
 SqList *SqListCreate(void);
 
 /*销毁一个List*/
-void SqListDistroy(SqList *pList);
+BOOL SqListDistroy(SqList *pList);
 
 /*清空一个List*/
 void SqListClear(SqList *pList);

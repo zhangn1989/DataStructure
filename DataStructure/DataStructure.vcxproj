@@ -118,12 +118,14 @@
     <ClCompile Include="LinkedList.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="public.c" />
+    <ClCompile Include="SequenceStack.c" />
     <ClCompile Include="SequentialList.c" />
     <ClCompile Include="StaticLinkedList.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LinkedList.h" />
     <ClInclude Include="public.h" />
+    <ClInclude Include="SequenceStack.h" />
     <ClInclude Include="SequentialList.h" />
     <ClInclude Include="StaticLinkedList.h" />
   </ItemGroup>

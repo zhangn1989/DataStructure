@@ -26,10 +26,10 @@ SqList * SqListCreate(void)
 	return pList;
 }
 
-void SqListDistroy(SqList * pList)
+BOOL SqListDistroy(SqList * pList)
 {
 	if (!pList)
-		return;
+		return FALSE;
 
 	if (pList->elem)
 		free(pList->elem);
@@ -37,7 +37,7 @@ void SqListDistroy(SqList * pList)
 	free(pList);
 	pList = NULL;
 
-	return;
+	return TRUE;
 }
 
 void SqListClear(SqList * pList)
@@ -119,7 +119,7 @@ void SqListInsert(SqList * pList, int i, ElemType * pElem)
 		if (!p)
 			return;
 
-		memset((char *)pList->elem + pList->iListSize * sizeof(ElemType), 
+		memset(p + pList->iListSize,
 			0, LISTINCREMENT * sizeof(ElemType));
 		pList->elem = p;
 		pList->iListSize += LISTINCREMENT;

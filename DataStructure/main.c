@@ -5,11 +5,13 @@
 #include "SequentialList.h"
 #include "LinkedList.h"
 #include "StaticLinkedList.h"
+#include "SequenceStack.h"
 
 int main(int argc, char **argv)
 {
-//	SqTestFunc();
-	LkTestFunc();
+	SqTestFunc();
+//	LkTestFunc();
 //	SLkTestFunc();
+//	SqStackTestFunc();
 	return 0;
 }

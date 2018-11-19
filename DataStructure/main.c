@@ -9,9 +9,9 @@
 
 int main(int argc, char **argv)
 {
-	SqTestFunc();
+//	SqTestFunc();
 //	LkTestFunc();
 //	SLkTestFunc();
-//	SqStackTestFunc();
+	SqStackTestFunc();
 	return 0;
 }

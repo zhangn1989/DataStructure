@@ -8,7 +8,7 @@ extern "C"
 {
 #endif // __cplusplus
 
-#define STACK_INIT_SIZE	10
+#define STACK_INIT_SIZE	100
 #define STACKINCREMENT	10
 
 typedef struct  
@@ -25,8 +25,14 @@ BOOL SqStackIsEmpty(SqStack *);
 int SqStackLength(SqStack *s);
 ElemType *SqGetTop(SqStack *s);
 void SqPush(SqStack *s, ElemType *elem);
-ElemType SqPop(SqStack *s);
+BOOL SqPop(SqStack *s, ElemType *elem);
 void SqStackTestFunc(void);
+
+void conversion(int N);
+BOOL BracketTest(const char *str);
+void LineEdit(const char *str);
+void MazePath();
+void EvaluateExpression(const char *str);
 
 #ifdef __cplusplus
 }

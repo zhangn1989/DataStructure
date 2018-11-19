@@ -37,6 +37,7 @@ void SqClearStack(SqStack *s)
 		return;
 
 	memset(s->base, 0, s->stacksize * sizeof(ElemType));
+	s->top = s->base;
 }
 
 BOOL SqStackIsEmpty(SqStack *s)
@@ -86,22 +87,26 @@ void SqPush(SqStack *s, ElemType *elem)
 	++s->top;
 }
 
-ElemType SqPop(SqStack *s)
+BOOL SqPop(SqStack *s, ElemType *elem)
 {
-	ElemType elem;
-	memset(&elem, 0, sizeof(elem));
-
-	if (!s || !s->base)
-		return elem;
+	if (!s || !s->base || s->base == s->top)
+		return FALSE;
 
 	--s->top;
-	elem = *(s->top);
+	if (elem)
+		memcpy(elem, s->top, sizeof(ElemType));
 	memset(s->top, 0, sizeof(ElemType));
-	return elem;
+	return TRUE;
 }
 
 void SqStackTestFunc(void)
 {
+	LineEdit("whli##ilr#e(s# * s)");
+	LineEdit("outcha@putchar( * s =# ++);");
+	conversion(1348);
+	BracketTest("456(123(4556(678)(4567)4658)65467)8674");
+	BracketTest("()(((())())()()))))()(");
+	BracketTest(")(()()))");
 	SqStack *s = SqInitStack();
 	if (!s)
 		return;
@@ -121,8 +126,108 @@ void SqStackTestFunc(void)
 	ElemType et;
 	et.data = 'z';
 	SqPush(s, &et);
-	et = SqPop(s);
+	SqPop(s, &et);
 
 	SqClearStack(s);
 	SqDestroyStack(s);
+}
+
+void conversion(int N)
+{
+	SqStack *s = SqInitStack();
+	if (!s)
+		return;
+	ElemType elem;
+	elem.data = N;
+	while (elem.data)
+	{
+		ElemType tmp;
+		tmp.data = elem.data % 8;
+		SqPush(s, &tmp);
+		elem.data = elem.data / 8;
+	}
+
+	while (!SqStackIsEmpty(s))
+	{
+		SqPop(s, &elem);
+		printf("%d", elem.data);
+	}
+	printf("\n");
+	SqDestroyStack(s);
+}
+
+BOOL BracketTest(const char *str)
+{
+	SqStack *s = SqInitStack();
+	if (!s)
+		return FALSE;
+
+	int i;
+	ElemType elem;
+	for (i = 0; str[i] != 0; ++i)
+	{
+		if (str[i] == '(')
+		{
+			elem.data = str[i];
+			SqPush(s, &elem);
+		}
+		else if(str[i] == ')')
+		{
+			if (!SqPop(s, &elem))
+				return FALSE;
+		}
+		else
+		{
+			continue;
+		}
+	}
+	
+	BOOL ret = SqStackIsEmpty(s);
+	SqDestroyStack(s);
+	return ret;
+}
+
+void LineEdit(const char *str)
+{
+	SqStack *s = SqInitStack();
+	if (!s)
+		return ;
+
+	int i;
+	ElemType elem;
+
+	for (i = 0; str[i] != 0; ++i)
+	{
+		switch (str[i])
+		{
+		case '#':
+			SqPop(s, NULL);
+			break;
+		case '@':
+			SqClearStack(s);
+			break;
+		default:
+			elem.data = str[i];
+			SqPush(s, &elem);
+		}
+	}
+
+	ElemType *p = s->base;
+	while (p != s->top)
+	{
+		printf("%c", p->data);
+		++p;
+	}
+	printf("\n");
+	SqDestroyStack(s);
+}
+
+void MazePath()
+{
+
+}
+
+void EvaluateExpression(const char *str)
+{
+
 }
